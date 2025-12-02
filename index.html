@@ -1,0 +1,1875 @@
+<!doctype html>
+<html lang="id">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulasi Gerak Jatuh Bebas</title>
+  <script src="/_sdk/data_sdk.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <style>
+        body {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100%;
+        }
+        
+        html, body {
+            height: 100%;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .main-title {
+            font-family: 'Impact', 'Franklin Gothic Bold', 'Arial Black', sans-serif;
+            font-weight: 900;
+            font-size: 2.5rem;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            color: #1f2937;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            padding: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .nav-tab {
+            flex: 1;
+            padding: 15px 20px;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: #555;
+        }
+        
+        .nav-tab.active {
+            background: #4f46e5;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+        }
+        
+        .tab-content {
+            display: none;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .simulation-container {
+            display: flex;
+            gap: 30px;
+            margin-top: 30px;
+        }
+        
+        .simulation-area {
+            flex: 2;
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+            height: 800px;
+            border: 3px solid #e2e8f0;
+            overflow: hidden;
+        }
+        
+        .controls {
+            flex: 1;
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .ball {
+            width: 30px;
+            height: 30px;
+            position: absolute;
+            transition: all 0.1s linear;
+            transform-origin: 50% 50%;
+        }
+        
+        .ball-arrow {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            --arrow-color: #ef4444;
+            --arrow-length: 20px;
+        }
+        
+        .ball-arrow::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: var(--arrow-length);
+            height: 4px;
+            background: var(--arrow-color);
+            transform: translate(-50%, -50%);
+            border-radius: 2px;
+            transform-origin: left center;
+        }
+        
+        .ball-arrow::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-left: 8px solid var(--arrow-color);
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+            transform: translate(calc(var(--arrow-length) / 2 - 4px), -50%);
+        }
+        
+
+        
+        .control-group {
+            margin-bottom: 20px;
+        }
+        
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .control-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .control-group input:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: #4f46e5;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 10px;
+        }
+        
+        .btn:hover {
+            background: #4338ca;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #6b7280;
+        }
+        
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+        
+        .info-panel {
+            background: #f0f9ff;
+            border: 2px solid #0ea5e9;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .quiz-question {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .quiz-options {
+            margin-top: 15px;
+        }
+        
+        .quiz-option {
+            display: block;
+            margin-bottom: 10px;
+            padding: 12px;
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .quiz-option:hover {
+            background: #e0f2fe;
+            border-color: #0ea5e9;
+        }
+        
+        .quiz-option.selected {
+            background: #dbeafe;
+            border-color: #3b82f6;
+        }
+        
+        .quiz-option.correct {
+            background: #dcfce7;
+            border-color: #16a34a;
+        }
+        
+        .quiz-option.incorrect {
+            background: #fee2e2;
+            border-color: #dc2626;
+        }
+        
+        .theory-section {
+            margin-bottom: 30px;
+        }
+        
+        .theory-section h3 {
+            color: #1f2937;
+            margin-bottom: 15px;
+            font-size: 24px;
+        }
+        
+        .formula-box {
+            background: #f0f9ff;
+            border: 2px solid #0ea5e9;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .example-box {
+            background: #f0fdf4;
+            border: 2px solid #16a34a;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #4f46e5;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .student-form {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .results-panel {
+            background: #f0fdf4;
+            border: 2px solid #16a34a;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .trajectory-path {
+            stroke: #8b5cf6;
+            stroke-width: 4;
+            fill: none;
+            stroke-dasharray: 12,6;
+            opacity: 0.9;
+        }
+        
+        .ball-trail {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: rgba(239, 68, 68, 0.8);
+            border-radius: 50%;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+            box-shadow: 0 0 4px rgba(239, 68, 68, 0.4);
+        }
+        
+        .ball-trail.fading {
+            opacity: 0.2;
+        }
+        
+        .velocity-trail {
+            position: absolute;
+            transform-origin: 50% 50%;
+            pointer-events: none;
+            opacity: 0.7;
+            transition: opacity 0.5s ease;
+        }
+        
+        .trail-arrow-line {
+            height: 2px;
+            background: #10b981;
+            border-radius: 1px;
+        }
+        
+        .trail-arrow-head {
+            position: absolute;
+            right: -6px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-left: 6px solid #10b981;
+            border-top: 3px solid transparent;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .velocity-trail.fading {
+            opacity: 0.3;
+        }
+        
+        .simulation-type {
+            display: none;
+        }
+        
+        .simulation-type.active {
+            display: block;
+        }
+    </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
+ </head>
+ <body>
+  <main class="container">
+   <header class="header">
+    <h1 id="lesson-title" class="main-title">GERAK JATUH BEBAS</h1>
+    <p><strong>Guru:</strong> <span id="teacher-name">Pak/Bu Guru Fisika</span> | <strong>Sekolah:</strong> <span id="school-name">SMA Negeri</span></p>
+    <p>Pelajaran Fisika untuk Kelas XI - Materi Kinematika</p>
+   </header>
+   <nav class="nav-tabs"><button class="nav-tab active" onclick="showTab('theory')">📚 Teori</button> <button class="nav-tab" onclick="showTab('simulation')">🎯 Simulasi</button> <button class="nav-tab" onclick="showTab('experiment')">🧪 Percobaan</button> <button class="nav-tab" onclick="showTab('quiz')">📝 Kuis</button> <button class="nav-tab" onclick="showTab('results')">📊 Hasil Kuis</button>
+   </nav>
+   <div id="theory-tab" class="tab-content active">
+    <div class="theory-section">
+     <h3>🎯 Tujuan Pembelajaran</h3>
+     <ul>
+      <li>Menjelaskan pengertian dan konsep dasar gerak jatuh bebas (termasuk percepatan gravitasi, waktu, ketinggian)</li>
+      <li>Menggunakan persamaan gerak GLBB dalam gerak jatuh bebas untuk menghitung kecepatan, waktu, dan ketinggian</li>
+      <li>Melakukan percobaan sederhana dengan mengukur total waktu benda di udara, kemudian menghitung ketinggian benda</li>
+      <li>Menganalisis perubahan vektor kecepatan pada gerak vertikal ke atas dan gerak jatuh bebas</li>
+      <li>Membandingkan karakteristik gerak jatuh bebas dengan gerak vertikal ke atas</li>
+     </ul>
+    </div>
+    <div class="theory-section">
+     <h3>📖 Pengertian Gerak Jatuh Bebas</h3>
+     <p>Gerak jatuh bebas adalah gerak benda yang dijatuhkan dari ketinggian tertentu tanpa kecepatan awal, hanya dipengaruhi oleh gaya gravitasi bumi.</p>
+     <h4>Karakteristik Gerak Jatuh Bebas:</h4>
+     <ul>
+      <li>Kecepatan awal (v₀) = 0 m/s</li>
+      <li>Percepatan = g = 9,8 m/s² (ke bawah)</li>
+      <li>Lintasan berupa garis lurus vertikal</li>
+     </ul>
+    </div>
+    <div class="theory-section">
+     <h3>🚀 Gerak Vertikal ke Atas</h3>
+     <p>Ketika benda dilempar vertikal ke atas, benda akan mengalami:</p>
+     <ul>
+      <li><strong>Fase naik:</strong> Kecepatan berkurang karena melawan gravitasi</li>
+      <li><strong>Titik puncak:</strong> Kecepatan = 0 m/s</li>
+      <li><strong>Fase turun:</strong> Kecepatan bertambah karena gravitasi</li>
+     </ul>
+     <div class="formula-box">
+      <h4>Persamaan Gerak Vertikal:</h4>
+      <p>v = v₀ - gt</p>
+      <p>h = v₀t - ½gt²</p>
+      <p>v² = v₀² - 2gh</p>
+     </div>
+    </div>
+    <div class="theory-section">
+     <h3>📊 Analisis Vektor Kecepatan</h3>
+     <p>Pada gerak vertikal ke atas:</p>
+     <ul>
+      <li><strong>t = 0:</strong> v = v₀ (maksimum, arah ke atas)</li>
+      <li><strong>Saat naik:</strong> v berkurang, arah tetap ke atas</li>
+      <li><strong>Titik puncak:</strong> v = 0</li>
+      <li><strong>Saat turun:</strong> v bertambah, arah ke bawah</li>
+     </ul>
+     <div class="example-box">
+      <h4>Contoh Soal:</h4>
+      <p>Sebuah bola dilempar vertikal ke atas dengan kecepatan awal 20 m/s. Tentukan:</p>
+      <ol>
+       <li>Tinggi maksimum yang dicapai</li>
+       <li>Waktu untuk mencapai titik puncak</li>
+       <li>Kecepatan saat kembali ke posisi awal</li>
+      </ol>
+      <p><strong>Penyelesaian:</strong></p>
+      <p>1. h_max = v₀²/(2g) = 20²/(2×9,8) = 20,4 m</p>
+      <p>2. t_puncak = v₀/g = 20/9,8 = 2,04 s</p>
+      <p>3. v_akhir = -v₀ = -20 m/s (ke bawah)</p>
+     </div>
+    </div>
+   </div>
+   <div id="simulation-tab" class="tab-content">
+    <h3>🎯 Simulasi Gerak Vertikal</h3>
+    <p>Pilih jenis simulasi untuk memahami perbedaan gerak jatuh bebas dan gerak vertikal ke atas!</p><!-- Sub-navigation for simulation types -->
+    <div class="nav-tabs" style="margin-bottom: 20px;"><button class="nav-tab active" onclick="showSimulationType('vertical-up')">🚀 Gerak Vertikal ke Atas</button> <button class="nav-tab" onclick="showSimulationType('free-fall')">⬇️ Gerak Jatuh Bebas</button>
+    </div><!-- Vertical Up Simulation -->
+    <div id="vertical-up-sim" class="simulation-type active">
+     <h4>🚀 Simulasi Gerak Vertikal ke Atas</h4>
+     <p>Benda dilempar dari bawah ke atas, mencapai puncak, lalu kembali turun ke posisi awal.</p>
+     <div class="simulation-container">
+      <div class="simulation-area" id="simulation-area-up">
+       <svg id="trajectory-svg-up" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"><path id="trajectory-path-up" class="trajectory-path" d=""></path>
+       </svg>
+       <div class="ball" id="ball-up">
+        <div class="ball-arrow"></div>
+       </div>
+      </div>
+      <div class="controls">
+       <div class="control-group"><label for="initial-velocity-up">Kecepatan Awal (m/s):</label> <input type="number" id="initial-velocity-up" value="20" min="5" max="50">
+       </div>
+       <div class="control-group"><label for="gravity-up">Gravitasi (m/s²):</label> <input type="number" id="gravity-up" value="9.8" min="1" max="15" step="0.1">
+       </div><button class="btn" onclick="startVerticalUpSimulation()">🚀 Mulai Simulasi</button> <button class="btn btn-secondary" onclick="resetVerticalUpSimulation()">🔄 Reset</button>
+       <div class="info-panel">
+        <h4>📊 Data Real-time:</h4>
+        <p><strong>Waktu:</strong> <span id="time-display-up">0.0</span> s</p>
+        <p><strong>Kecepatan:</strong> <span id="velocity-display-up">0.0</span> m/s</p>
+        <p><strong>Ketinggian:</strong> <span id="height-display-up">0.0</span> m</p>
+        <p><strong>Fase:</strong> <span id="phase-display-up">Siap</span></p>
+       </div>
+       <div class="info-panel" style="background: #fef3c7; border-color: #f59e0b;">
+        <h4>💡 Perhatikan Vektor Kecepatan:</h4>
+        <ul style="margin: 10px 0; padding-left: 20px;">
+         <li>🟢 Panah hijau ke atas = bergerak naik</li>
+         <li>🔴 Panah merah ke bawah = bergerak turun</li>
+         <li>⚫ Panah abu-abu kecil = kecepatan nol (puncak)</li>
+         <li>📏 Panjang panah = besar kecepatan</li>
+         <li>🎯 15 titik jejak menunjukkan lintasan lengkap</li>
+        </ul>
+       </div>
+       <div class="info-panel" style="background: #ecfdf5; border-color: #10b981;">
+        <h4>🏆 Data Pencapaian:</h4>
+        <p><strong>Tinggi Maksimum:</strong> <span id="max-height-display-up">0.0</span> m</p>
+        <p><strong>Waktu ke Puncak:</strong> <span id="time-to-peak-display-up">0.0</span> s</p>
+        <p><strong>Waktu Total:</strong> <span id="total-time-display-up">0.0</span> s</p>
+        <p><strong>Kec. Akhir:</strong> <span id="final-velocity-display-up">0.0</span> m/s</p>
+        <p><strong>Status:</strong> <span id="achievement-status-up">Belum Dimulai</span></p>
+       </div>
+      </div>
+     </div>
+    </div><!-- Free Fall Simulation -->
+    <div id="free-fall-sim" class="simulation-type">
+     <h4>⬇️ Simulasi Gerak Jatuh Bebas</h4>
+     <p>Benda dijatuhkan dari ketinggian tertentu tanpa kecepatan awal, hanya dipengaruhi gravitasi.</p>
+     <div class="simulation-container">
+      <div class="simulation-area" id="simulation-area-fall">
+       <svg id="trajectory-svg-fall" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"><path id="trajectory-path-fall" class="trajectory-path" d=""></path>
+       </svg>
+       <div class="ball" id="ball-fall">
+        <div class="ball-arrow"></div>
+       </div>
+      </div>
+      <div class="controls">
+       <div class="control-group"><label for="initial-height">Ketinggian Awal (m):</label> <input type="number" id="initial-height" value="50" min="10" max="100">
+       </div>
+       <div class="control-group"><label for="gravity-fall">Gravitasi (m/s²):</label> <input type="number" id="gravity-fall" value="9.8" min="1" max="15" step="0.1">
+       </div><button class="btn" onclick="startFreeFallSimulation()">⬇️ Mulai Simulasi</button> <button class="btn btn-secondary" onclick="resetFreeFallSimulation()">🔄 Reset</button>
+       <div class="info-panel">
+        <h4>📊 Data Real-time:</h4>
+        <p><strong>Waktu:</strong> <span id="time-display-fall">0.0</span> s</p>
+        <p><strong>Kecepatan:</strong> <span id="velocity-display-fall">0.0</span> m/s</p>
+        <p><strong>Ketinggian:</strong> <span id="height-display-fall">0.0</span> m</p>
+        <p><strong>Fase:</strong> <span id="phase-display-fall">Siap</span></p>
+       </div>
+       <div class="info-panel" style="background: #fef3c7; border-color: #f59e0b;">
+        <h4>💡 Perhatikan Vektor Kecepatan:</h4>
+        <ul style="margin: 10px 0; padding-left: 20px;">
+         <li>🔴 Panah merah ke bawah = bergerak turun</li>
+         <li>📈 Panah semakin panjang = kecepatan bertambah</li>
+         <li>📏 Panjang panah = besar kecepatan</li>
+         <li>🎯 15 titik jejak menunjukkan lintasan jatuh lengkap</li>
+         <li>⚡ Kecepatan awal = 0 m/s (panah kecil)</li>
+        </ul>
+       </div>
+       <div class="info-panel" style="background: #ecfdf5; border-color: #10b981;">
+        <h4>🏆 Data Pencapaian:</h4>
+        <p><strong>Ketinggian Awal:</strong> <span id="initial-height-display">0.0</span> m</p>
+        <p><strong>Waktu Jatuh:</strong> <span id="fall-time-display">0.0</span> s</p>
+        <p><strong>Kec. Akhir:</strong> <span id="final-velocity-fall-display">0.0</span> m/s</p>
+        <p><strong>Status:</strong> <span id="achievement-status-fall">Belum Dimulai</span></p>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div>
+   <div id="experiment-tab" class="tab-content">
+    <h3>🧪 Percobaan Mengukur Ketinggian</h3>
+    <p>Lakukan percobaan untuk mengukur ketinggian suatu tempat dengan melempar bola ke atas dan mencatat waktu di udara!</p>
+    <div class="theory-section">
+     <h4>📖 Dasar Teori Percobaan</h4>
+     <p>Ketika kita melempar bola vertikal ke atas dari suatu ketinggian, bola akan kembali ke tangan kita setelah waktu tertentu. Waktu total ini dapat digunakan untuk menghitung ketinggian tempat kita berdiri.</p>
+     <div class="info-panel" style="background: #dbeafe; border-color: #3b82f6; margin: 20px 0;">
+      <h4>📄 Panduan Lengkap Percobaan</h4>
+      <p>Untuk panduan detail dan lembar kerja percobaan, silakan akses dokumen berikut:</p><a href="https://docs.google.com/document/d/1YCP0nqNj7XyyM3co8cGitH2cKdBJXKfBQEiRGBwX6FE/edit?usp=sharing" target="_blank" rel="noopener noreferrer" style="display: inline-block; background: #3b82f6; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-top: 10px; transition: background 0.3s ease;" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'"> 📋 Buka Panduan Percobaan Lengkap </a>
+      <p style="margin-top: 10px; font-size: 14px; color: #6b7280;"><em>Link akan terbuka di tab baru. Pastikan Anda memiliki akses internet untuk membuka dokumen Google Docs.</em></p>
+     </div>
+     <div class="formula-box">
+      <h4>🧮 Penurunan Rumus untuk Mengukur Ketinggian:</h4>
+      <p><strong>Situasi:</strong> Bola dilempar vertikal ke atas dari ketinggian h, lalu kembali ke tangan</p><br>
+      <p><strong>Langkah 1 - Analisis Gerak:</strong></p>
+      <p>• Waktu total di udara = t (dari lepas hingga kembali ke tangan)</p>
+      <p>• Bola mengalami 2 fase: naik ke puncak, lalu turun kembali ke tangan</p><br>
+      <p><strong>Langkah 2 - Fase Naik dan Turun:</strong></p>
+      <p>• Misalkan waktu naik ke puncak = t₁</p>
+      <p>• Waktu turun dari puncak ke tangan = t₂</p>
+      <p>• Total waktu: t = t₁ + t₂</p><br>
+      <p><strong>Langkah 3 - Tinggi Maksimum:</strong></p>
+      <p>• Tinggi maksimum dari posisi lempar = h_max</p>
+      <p>• Total tinggi dari tanah = h + h_max</p><br>
+      <p><strong>Langkah 4 - Waktu Turun:</strong></p>
+      <p>• Bola turun dari tinggi total (h + h_max) dengan kecepatan awal = 0</p>
+      <p>• Menggunakan: h + h_max = ½gt₂²</p>
+      <p>• Kecepatan saat sampai tangan: v = gt₂</p><br>
+      <p><strong>Langkah 5 - Waktu Naik:</strong></p>
+      <p>• Kecepatan awal lempar = v₀ = gt₂ (sama dengan kecepatan akhir)</p>
+      <p>• Waktu naik: t₁ = v₀/g = gt₂/g = t₂</p>
+      <p>• Jadi: t₁ = t₂, sehingga t = 2t₂</p><br>
+      <p><strong>Langkah 6 - Substitusi:</strong></p>
+      <p>• Dari t = 2t₂, maka t₂ = t/2</p>
+      <p>• Tinggi maksimum: h_max = v₀²/(2g) = (gt₂)²/(2g) = g²t₂²/(2g) = gt₂²/2</p>
+      <p>• Substitusi t₂ = t/2: h_max = g(t/2)²/2 = gt²/8</p><br>
+      <p><strong>Langkah 7 - Ketinggian Tempat:</strong></p>
+      <p>• Total tinggi: h + h_max = ½g(t/2)² = gt²/8</p>
+      <p>• Tetapi h_max = gt²/8, maka: h + gt²/8 = gt²/8</p>
+      <p>• <strong>Koreksi:</strong> Sebenarnya h + h_max = ½gt₂² = ½g(t/2)² = gt²/8</p>
+      <p>• Jadi: <strong>h = gt²/8 - h_max</strong></p><br>
+      <p style="background: #fee2e2; padding: 10px; border-radius: 6px; border: 2px solid #dc2626;"><strong>🔴 Kesimpulan Penting:</strong><br>
+        Rumus sederhana <strong>h = gt²/8</strong> hanya berlaku jika kita mengabaikan ketinggian maksimum yang dicapai bola. Untuk pengukuran yang lebih akurat, diperlukan analisis yang lebih kompleks dengan mempertimbangkan kecepatan awal lemparan.</p><br>
+      <p><strong>Rumus Praktis untuk Percobaan:</strong></p>
+      <p style="font-size: 20px; color: #dc2626;"><strong>h ≈ (g × t²)/8</strong></p>
+      <p><em>dimana t = waktu total di udara, g = 9.8 m/s²</em></p><br>
+      <p style="font-size: 14px; color: #7c2d12; background: #fef3c7; padding: 10px; border-radius: 6px;"><strong>⚠️ Catatan:</strong> Rumus ini memberikan estimasi kasar ketinggian. Akurasi tergantung pada konsistensi lemparan vertikal dan pengabaian hambatan udara. Untuk hasil yang lebih akurat, gunakan metode pengukuran langsung atau analisis yang lebih kompleks.</p>
+     </div>
+     <div class="example-box">
+      <h4>💡 Cara Melakukan Percobaan:</h4>
+      <ol>
+       <li><strong>Langkah 1:</strong> Lempar benda ke atas dan mulai stopwatch saat benda dilepas dan berhenti saat benda menyentuh tangan kembali. Catat waktu total di udara (t dalam detik)</li>
+       <li><strong>Langkah 2:</strong> Ulangi percobaan sebanyak 10 kali</li>
+       <li>Berdiri di tempat yang ingin diukur ketinggiannya</li>
+       <li>Gunakan bola yang mudah ditangkap (bola tenis atau sejenisnya)</li>
+       <li>Hitung ketinggian rata-rata menggunakan rumus</li>
+      </ol>
+     </div>
+    </div>
+    <div class="simulation-container" style="flex-direction: column; gap: 20px;">
+     <div class="controls" style="flex: none; max-width: none;">
+      <h4>📊 Input Data Percobaan</h4>
+      <div class="control-group"><label for="gravity-experiment">Nilai Gravitasi (m/s²):</label> <input type="number" id="gravity-experiment" value="9.8" min="9.5" max="10.0" step="0.1">
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 20px;">
+       <div class="control-group"><label for="time1">Percobaan 1 (detik):</label> <input type="number" id="time1" step="0.01" min="0" placeholder="0.00" onchange="calculateHeight(1)">
+       </div>
+       <div class="control-group"><label for="time2">Percobaan 2 (detik):</label> <input type="number" id="time2" step="0.01" min="0" placeholder="0.00" onchange="calculateHeight(2)">
+       </div>
+       <div class="control-group"><label for="time3">Percobaan 3 (detik):</label> <input type="number" id="time3" step="0.01" min="0" placeholder="0.00" onchange="calculateHeight(3)">
+       </div>
+       <div class="control-group"><label for="time4">Percobaan 4 (detik):</label> <input type="number" id="time4" step="0.01" min="0" placeholder="0.00" onchange="calculateHeight(4)">
+       </div>
+       <div class="control-group"><label for="time5">Percobaan 5 (detik):</label> <input type="number" id="time5" step="0.01" min="0" placeholder="0.00" onchange="calculateHeight(5)">
+       </div>
+       <div class="control-group"><label for="time6">Percobaan 6 (detik):</label> <input type="number" id="time6" step="0.01" min="0" placeholder="0.00" onchange="calculateHeight(6)">
+       </div>
+       <div class="control-group"><label for="time7">Percobaan 7 (detik):</label> <input type="number" id="time7" step="0.01" min="0" placeholder="0.00" onchange="calculateHeight(7)">
+       </div>
+       <div class="control-group"><label for="time8">Percobaan 8 (detik):</label> <input type="number" id="time8" step="0.01" min="0" placeholder="0.00" onchange="calculateHeight(8)">
+       </div>
+       <div class="control-group"><label for="time9">Percobaan 9 (detik):</label> <input type="number" id="time9" step="0.01" min="0" placeholder="0.00" onchange="calculateHeight(9)">
+       </div>
+       <div class="control-group"><label for="time10">Percobaan 10 (detik):</label> <input type="number" id="time10" step="0.01" min="0" placeholder="0.00" onchange="calculateHeight(10)">
+       </div>
+      </div><button class="btn" onclick="calculateAllHeights()" style="margin-top: 20px;">🧮 Hitung Semua Ketinggian</button> <button class="btn btn-secondary" onclick="clearAllData()">🗑️ Hapus Semua Data</button>
+     </div>
+     <div class="controls" style="flex: none; max-width: none;">
+      <h4>📈 Hasil Perhitungan</h4>
+      <div style="overflow-x: auto;">
+       <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+        <thead>
+         <tr style="background: #f3f4f6;">
+          <th style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">No</th>
+          <th style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">Waktu (s)</th>
+          <th style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">Ketinggian (m)</th>
+         </tr>
+        </thead>
+        <tbody id="results-table">
+         <tr>
+          <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">1</td>
+          <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;" id="display-time1">-</td>
+          <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;" id="display-height1">-</td>
+         </tr>
+         <tr>
+          <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">2</td>
+          <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;" id="display-time2">-</td>
+          <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;" id="display-height2">-</td>
+         </tr>
+         <tr>
+          <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">3</td>
+          <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;" id="display-time3">-</td>
+          <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;" id="display-height3">-</td>
+         </tr>
+         <tr>
+          <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">4</td>
+          <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;" id="display-time4">-</td>
+          <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;" id="display-height4">-</td>
+         </tr>
+         <tr>
+          <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">5</td>
+          <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;" id="display-time5">-</td>
+          <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;" id="display-height5">-</td>
+         </tr>
+         <tr>
+          <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">6</td>
+          <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;" id="display-time6">-</td>
+          <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;" id="display-height6">-</td>
+         </tr>
+         <tr>
+          <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">7</td>
+          <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;" id="display-time7">-</td>
+          <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;" id="display-height7">-</td>
+         </tr>
+         <tr>
+          <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">8</td>
+          <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;" id="display-time8">-</td>
+          <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;" id="display-height8">-</td>
+         </tr>
+         <tr>
+          <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">9</td>
+          <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;" id="display-time9">-</td>
+          <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;" id="display-height9">-</td>
+         </tr>
+         <tr>
+          <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">10</td>
+          <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;" id="display-time10">-</td>
+          <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;" id="display-height10">-</td>
+         </tr>
+        </tbody>
+       </table>
+      </div>
+      <div class="info-panel" style="background: #ecfdf5; border-color: #10b981; margin-top: 20px;">
+       <h4>🎯 Hasil Akhir:</h4>
+       <p><strong>Jumlah Data Valid:</strong> <span id="valid-data-count">0</span> dari 10</p>
+       <p><strong>Ketinggian Rata-rata:</strong> <span id="average-height">0.00</span> m</p>
+       <p><strong>Ketinggian Minimum:</strong> <span id="min-height">0.00</span> m</p>
+       <p><strong>Ketinggian Maksimum:</strong> <span id="max-height">0.00</span> m</p>
+       <p><strong>Standar Deviasi:</strong> <span id="std-deviation">0.00</span> m</p>
+      </div>
+      <div class="info-panel" style="background: #fef3c7; border-color: #f59e0b; margin-top: 15px;">
+       <h4>💡 Tips Percobaan:</h4>
+       <ul style="margin: 10px 0; padding-left: 20px;">
+        <li>Lempar bola dengan kekuatan yang konsisten</li>
+        <li>Pastikan bola dilempar vertikal ke atas</li>
+        <li>Gunakan stopwatch untuk akurasi waktu</li>
+        <li>Lakukan di tempat yang tidak berangin</li>
+        <li>Semakin banyak data, semakin akurat hasilnya</li>
+       </ul>
+      </div>
+     </div>
+    </div>
+   </div>
+   <div id="quiz-tab" class="tab-content">
+    <h3>📝 Kuis Pemahaman</h3>
+    <p>Jawab pertanyaan berikut untuk menguji pemahaman Anda tentang gerak jatuh bebas!</p>
+    <div class="student-form">
+     <div class="control-group"><label for="student-name">Nama Siswa:</label> <input type="text" id="student-name" placeholder="Masukkan nama lengkap Anda">
+     </div>
+    </div>
+    <div class="quiz-question">
+     <h4>1. Pada gerak vertikal ke atas, apa yang terjadi dengan kecepatan benda saat mencapai titik puncak?</h4>
+     <div class="quiz-options"><label class="quiz-option"> <input type="radio" name="q1" value="a"> a) Kecepatan maksimum </label> <label class="quiz-option"> <input type="radio" name="q1" value="b"> b) Kecepatan nol </label> <label class="quiz-option"> <input type="radio" name="q1" value="c"> c) Kecepatan negatif </label> <label class="quiz-option"> <input type="radio" name="q1" value="d"> d) Kecepatan konstan </label> <label class="quiz-option"> <input type="radio" name="q1" value="e"> e) Kecepatan minimum </label>
+     </div>
+    </div>
+    <div class="quiz-question">
+     <h4>2. Jika sebuah bola dilempar ke atas dengan kecepatan 30 m/s, berapa waktu yang diperlukan untuk mencapai titik puncak? (g = 10 m/s²)</h4>
+     <div class="quiz-options"><label class="quiz-option"> <input type="radio" name="q2" value="a"> a) 2 sekon </label> <label class="quiz-option"> <input type="radio" name="q2" value="b"> b) 3 sekon </label> <label class="quiz-option"> <input type="radio" name="q2" value="c"> c) 4 sekon </label> <label class="quiz-option"> <input type="radio" name="q2" value="d"> d) 5 sekon </label> <label class="quiz-option"> <input type="radio" name="q2" value="e"> e) 6 sekon </label>
+     </div>
+    </div>
+    <div class="quiz-question">
+     <h4>3. Pada gerak jatuh bebas, percepatan benda adalah:</h4>
+     <div class="quiz-options"><label class="quiz-option"> <input type="radio" name="q3" value="a"> a) Nol </label> <label class="quiz-option"> <input type="radio" name="q3" value="b"> b) Berubah-ubah </label> <label class="quiz-option"> <input type="radio" name="q3" value="c"> c) Konstan = g </label> <label class="quiz-option"> <input type="radio" name="q3" value="d"> d) Tergantung massa </label> <label class="quiz-option"> <input type="radio" name="q3" value="e"> e) Tergantung ketinggian </label>
+     </div>
+    </div>
+    <div class="quiz-question">
+     <h4>4. Tinggi maksimum yang dicapai benda yang dilempar vertikal ke atas dengan kecepatan awal v₀ adalah:</h4>
+     <div class="quiz-options"><label class="quiz-option"> <input type="radio" name="q4" value="a"> a) v₀²/g </label> <label class="quiz-option"> <input type="radio" name="q4" value="b"> b) v₀²/(2g) </label> <label class="quiz-option"> <input type="radio" name="q4" value="c"> c) 2v₀²/g </label> <label class="quiz-option"> <input type="radio" name="q4" value="d"> d) v₀/g </label> <label class="quiz-option"> <input type="radio" name="q4" value="e"> e) v₀²/(4g) </label>
+     </div>
+    </div>
+    <div class="quiz-question">
+     <h4>5. Arah vektor kecepatan pada gerak vertikal ke atas saat benda sedang turun adalah:</h4>
+     <div class="quiz-options"><label class="quiz-option"> <input type="radio" name="q5" value="a"> a) Ke atas </label> <label class="quiz-option"> <input type="radio" name="q5" value="b"> b) Ke bawah </label> <label class="quiz-option"> <input type="radio" name="q5" value="c"> c) Horizontal </label> <label class="quiz-option"> <input type="radio" name="q5" value="d"> d) Tidak ada arah </label> <label class="quiz-option"> <input type="radio" name="q5" value="e"> e) Berubah-ubah arahnya </label>
+     </div>
+    </div>
+    <div class="quiz-question">
+     <h4>6. Sebuah batu dijatuhkan dari ketinggian 45 m. Berapa kecepatan batu saat menyentuh tanah? (g = 10 m/s²)</h4>
+     <div class="quiz-options"><label class="quiz-option"> <input type="radio" name="q6" value="a"> a) 20 m/s </label> <label class="quiz-option"> <input type="radio" name="q6" value="b"> b) 25 m/s </label> <label class="quiz-option"> <input type="radio" name="q6" value="c"> c) 30 m/s </label> <label class="quiz-option"> <input type="radio" name="q6" value="d"> d) 35 m/s </label> <label class="quiz-option"> <input type="radio" name="q6" value="e"> e) 40 m/s </label>
+     </div>
+    </div>
+    <div class="quiz-question">
+     <h4>7. Sebuah bola pingpong (massa 3 gram) dan bola besi (massa 300 gram) dijatuhkan bersamaan dari ketinggian 10 meter dalam ruang hampa. Manakah pernyataan yang benar?</h4>
+     <div class="quiz-options"><label class="quiz-option"> <input type="radio" name="q7" value="a"> a) Bola besi sampai lebih dulu karena lebih berat </label> <label class="quiz-option"> <input type="radio" name="q7" value="b"> b) Bola pingpong sampai lebih dulu karena lebih ringan </label> <label class="quiz-option"> <input type="radio" name="q7" value="c"> c) Keduanya sampai bersamaan dengan waktu yang sama </label> <label class="quiz-option"> <input type="radio" name="q7" value="d"> d) Bola besi sampai 100 kali lebih cepat </label> <label class="quiz-option"> <input type="radio" name="q7" value="e"> e) Tidak dapat diprediksi tanpa mengetahui bentuknya </label>
+     </div>
+    </div>
+    <div class="quiz-question">
+     <h4>8. Dua benda dengan massa berbeda dijatuhkan bersamaan dari ketinggian yang sama. Manakah pernyataan yang benar?</h4>
+     <div class="quiz-options"><label class="quiz-option"> <input type="radio" name="q8" value="a"> a) Benda lebih berat sampai lebih dulu </label> <label class="quiz-option"> <input type="radio" name="q8" value="b"> b) Benda lebih ringan sampai lebih dulu </label> <label class="quiz-option"> <input type="radio" name="q8" value="c"> c) Keduanya sampai bersamaan </label> <label class="quiz-option"> <input type="radio" name="q8" value="d"> d) Tergantung bentuk benda </label> <label class="quiz-option"> <input type="radio" name="q8" value="e"> e) Tidak dapat diprediksi </label>
+     </div>
+    </div>
+    <div class="quiz-question">
+     <h4>9. Grafik hubungan kecepatan (v) terhadap waktu (t) pada gerak vertikal ke atas berbentuk:</h4>
+     <div class="quiz-options"><label class="quiz-option"> <input type="radio" name="q9" value="a"> a) Garis horizontal </label> <label class="quiz-option"> <input type="radio" name="q9" value="b"> b) Garis miring ke atas </label> <label class="quiz-option"> <input type="radio" name="q9" value="c"> c) Garis miring ke bawah </label> <label class="quiz-option"> <input type="radio" name="q9" value="d"> d) Parabola terbuka ke atas </label> <label class="quiz-option"> <input type="radio" name="q9" value="e"> e) Parabola terbuka ke bawah </label>
+     </div>
+    </div>
+    <div class="quiz-question">
+     <h4>10. Sebuah bola dilempar vertikal ke atas dan kembali ke posisi awal setelah 4 sekon. Berapa tinggi maksimum yang dicapai bola? (g = 10 m/s²)</h4>
+     <div class="quiz-options"><label class="quiz-option"> <input type="radio" name="q10" value="a"> a) 10 m </label> <label class="quiz-option"> <input type="radio" name="q10" value="b"> b) 15 m </label> <label class="quiz-option"> <input type="radio" name="q10" value="c"> c) 20 m </label> <label class="quiz-option"> <input type="radio" name="q10" value="d"> d) 25 m </label> <label class="quiz-option"> <input type="radio" name="q10" value="e"> e) 30 m </label>
+     </div>
+    </div><button class="btn" onclick="submitQuiz()" id="submit-btn">📤 Kirim Jawaban</button>
+    <div class="results-panel" id="results-panel">
+     <h4>🎉 Hasil Kuis</h4>
+     <p id="score-display"></p>
+     <div id="answer-review"></div>
+    </div>
+   </div>
+   <div id="results-tab" class="tab-content">
+    <h3>📊 Hasil Kuis Siswa</h3>
+    <p>Daftar hasil kuis yang telah dikerjakan oleh siswa-siswa</p>
+    <div class="controls" style="max-width: none; margin-bottom: 20px;">
+     <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+      <div class="control-group" style="margin: 0; flex: 1; min-width: 200px;"><label for="search-student">🔍 Cari Nama Siswa:</label> <input type="text" id="search-student" placeholder="Ketik nama siswa..." onkeyup="filterResults()">
+      </div>
+      <div class="control-group" style="margin: 0; flex: 1; min-width: 150px;"><label for="filter-score">📈 Filter Skor:</label> <select id="filter-score" onchange="filterResults()" style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 16px;"> <option value="all">Semua Skor</option> <option value="excellent">Sangat Baik (80-100%)</option> <option value="good">Baik (70-79%)</option> <option value="fair">Cukup (60-69%)</option> <option value="poor">Perlu Belajar (&lt;60%)</option> </select>
+      </div><button class="btn" onclick="refreshResults()" style="margin: 0; white-space: nowrap;">🔄 Refresh</button>
+     </div>
+    </div>
+    <div class="info-panel" style="background: #f0f9ff; border-color: #0ea5e9; margin-bottom: 20px;">
+     <h4>📈 Statistik Kelas</h4>
+     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
+      <div>
+       <p><strong>Total Siswa:</strong> <span id="total-students">0</span></p>
+       <p><strong>Skor Rata-rata:</strong> <span id="average-score">0</span>%</p>
+      </div>
+      <div>
+       <p><strong>Skor Tertinggi:</strong> <span id="highest-score">0</span>%</p>
+       <p><strong>Skor Terendah:</strong> <span id="lowest-score">0</span>%</p>
+      </div>
+      <div>
+       <p><strong>Lulus (≥70%):</strong> <span id="passing-count">0</span> siswa</p>
+       <p><strong>Persentase Lulus:</strong> <span id="passing-rate">0</span>%</p>
+      </div>
+     </div>
+    </div>
+    <div class="controls" style="max-width: none;">
+     <div style="overflow-x: auto;">
+      <table id="results-table-main" style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+       <thead>
+        <tr style="background: #f3f4f6;">
+         <th style="border: 1px solid #d1d5db; padding: 12px; text-align: center; min-width: 50px;">No</th>
+         <th style="border: 1px solid #d1d5db; padding: 12px; text-align: left; min-width: 200px;">Nama Siswa</th>
+         <th style="border: 1px solid #d1d5db; padding: 12px; text-align: center; min-width: 100px;">Skor</th>
+         <th style="border: 1px solid #d1d5db; padding: 12px; text-align: center; min-width: 120px;">Grade</th>
+         <th style="border: 1px solid #d1d5db; padding: 12px; text-align: center; min-width: 150px;">Waktu Selesai</th>
+         <th style="border: 1px solid #d1d5db; padding: 12px; text-align: center; min-width: 100px;">Aksi</th>
+        </tr>
+       </thead>
+       <tbody id="results-tbody">
+        <tr>
+         <td colspan="6" style="border: 1px solid #d1d5db; padding: 20px; text-align: center; color: #6b7280;">Belum ada hasil kuis yang tersimpan</td>
+        </tr>
+       </tbody>
+      </table>
+     </div>
+    </div>
+    <div id="student-detail-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; overflow-y: auto;">
+     <div style="background: white; margin: 50px auto; padding: 30px; border-radius: 15px; max-width: 800px; position: relative;"><button onclick="closeStudentDetail()" style="position: absolute; top: 15px; right: 15px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-size: 18px;">×</button>
+      <div id="student-detail-content"><!-- Content will be populated by JavaScript -->
+      </div>
+     </div>
+    </div>
+   </div>
+  </main>
+  <script>
+        // Configuration object
+        const defaultConfig = {
+            lesson_title: "GERAK JATUH BEBAS",
+            teacher_name: "Uswatun H",
+            school_name: "SMAN Dlasta"
+        };
+
+        // Global variables
+        let animationId;
+        let isAnimating = false;
+        let currentData = [];
+        let simulationData = {
+            maxHeight: 0,
+            timeToPeak: 0,
+            totalTime: 0,
+            finalVelocity: 0,
+            hasReachedPeak: false,
+            peakReached: false
+        };
+        let quizAnswers = {
+            q1: 'b', q2: 'b', q3: 'c', q4: 'b', q5: 'b',
+            q6: 'c', q7: 'c', q8: 'c', q9: 'c', q10: 'c'
+        };
+
+        let quizExplanations = {
+            q1: {
+                correct: 'b) Kecepatan nol',
+                explanation: 'Di titik puncak, benda berhenti sesaat sebelum berubah arah turun. Pada saat ini, kecepatan = 0 m/s karena benda tidak bergerak ke atas maupun ke bawah.'
+            },
+            q2: {
+                correct: 'b) 3 sekon',
+                explanation: 'Menggunakan rumus v = v₀ - gt, di puncak v = 0, maka: 0 = 30 - 10t, sehingga t = 30/10 = 3 sekon.'
+            },
+            q3: {
+                correct: 'c) Konstan = g',
+                explanation: 'Pada gerak jatuh bebas, percepatan selalu konstan sebesar g = 9,8 m/s² ke bawah, tidak tergantung massa atau ketinggian benda.'
+            },
+            q4: {
+                correct: 'b) v₀²/(2g)',
+                explanation: 'Menggunakan rumus v² = v₀² - 2gh, di puncak v = 0, maka: 0 = v₀² - 2gh, sehingga h = v₀²/(2g).'
+            },
+            q5: {
+                correct: 'b) Ke bawah',
+                explanation: 'Saat benda turun, vektor kecepatan selalu menunjuk ke arah gerak benda, yaitu ke bawah. Besar kecepatan bertambah seiring waktu.'
+            },
+            q6: {
+                correct: 'c) 30 m/s',
+                explanation: 'Menggunakan rumus v² = v₀² + 2gh, dengan v₀ = 0 (jatuh bebas): v² = 0 + 2(10)(45) = 900, maka v = √900 = 30 m/s.'
+            },
+            q7: {
+                correct: 'c) Keduanya sampai bersamaan dengan waktu yang sama',
+                explanation: 'Dalam ruang hampa (tanpa hambatan udara), semua benda jatuh dengan percepatan yang sama yaitu g = 9,8 m/s², tidak peduli massanya. Ini adalah prinsip dasar gerak jatuh bebas yang ditemukan Galileo. Massa tidak mempengaruhi waktu jatuh.'
+            },
+            q8: {
+                correct: 'c) Keduanya sampai bersamaan',
+                explanation: 'Dalam ruang hampa, semua benda jatuh dengan percepatan yang sama (g), tidak tergantung massa. Ini sesuai dengan hukum Galileo.'
+            },
+            q9: {
+                correct: 'c) Garis miring ke bawah',
+                explanation: 'Grafik v-t berbentuk garis lurus miring ke bawah karena kecepatan berkurang secara linear dengan gradien -g (percepatan negatif).'
+            },
+            q10: {
+                correct: 'c) 20 m',
+                explanation: 'Waktu total 4 s, maka waktu ke puncak = 2 s. Kecepatan awal: v₀ = gt = 10×2 = 20 m/s. Tinggi maksimum: h = v₀²/(2g) = 400/20 = 20 m.'
+            }
+        };
+
+        // Data handler for SDK
+        const dataHandler = {
+            onDataChanged(data) {
+                currentData = data;
+                console.log('Data updated:', data.length, 'records');
+                updateResultsDisplay();
+            }
+        };
+
+        // Element SDK implementation
+        const elementConfig = {
+            defaultConfig: defaultConfig,
+            onConfigChange: async (config) => {
+                document.getElementById('lesson-title').textContent = config.lesson_title || defaultConfig.lesson_title;
+                document.getElementById('teacher-name').textContent = config.teacher_name || defaultConfig.teacher_name;
+                document.getElementById('school-name').textContent = config.school_name || defaultConfig.school_name;
+            },
+            mapToCapabilities: (config) => ({
+                recolorables: [],
+                borderables: [],
+                fontEditable: undefined,
+                fontSizeable: undefined
+            }),
+            mapToEditPanelValues: (config) => new Map([
+                ["lesson_title", config.lesson_title || defaultConfig.lesson_title],
+                ["teacher_name", config.teacher_name || defaultConfig.teacher_name],
+                ["school_name", config.school_name || defaultConfig.school_name]
+            ])
+        };
+
+        // Initialize SDKs
+        async function initializeApp() {
+            try {
+                if (window.dataSdk) {
+                    const initResult = await window.dataSdk.init(dataHandler);
+                    if (!initResult.isOk) {
+                        console.error("Failed to initialize data SDK");
+                    }
+                }
+
+                if (window.elementSdk) {
+                    await window.elementSdk.init(elementConfig);
+                }
+            } catch (error) {
+                console.error("Initialization error:", error);
+            }
+        }
+
+        // Tab navigation
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName + '-tab').classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Simulation functions
+        let velocityTrails = [];
+        let ballTrails = [];
+        let lastTrailTime = 0;
+        let lastBallTrailTime = 0;
+        let trajectoryPoints = [];
+        let currentSimulationType = 'vertical-up';
+
+        // Show simulation type
+        function showSimulationType(type) {
+            // Hide all simulation types
+            document.querySelectorAll('.simulation-type').forEach(sim => {
+                sim.classList.remove('active');
+            });
+            
+            // Remove active class from all sub-nav tabs
+            document.querySelectorAll('#simulation-tab .nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected simulation type
+            document.getElementById(type + '-sim').classList.add('active');
+            event.target.classList.add('active');
+            
+            currentSimulationType = type;
+        }
+
+        // Vertical Up Simulation
+        function startVerticalUpSimulation() {
+            if (isAnimating) return;
+
+            const v0 = parseFloat(document.getElementById('initial-velocity-up').value);
+            const g = parseFloat(document.getElementById('gravity-up').value);
+            
+            resetVerticalUpSimulation();
+            isAnimating = true;
+            
+            // Reset trail variables
+            velocityTrails = [];
+            ballTrails = [];
+            trajectoryPoints = [];
+            lastTrailTime = 0;
+            lastBallTrailTime = 0;
+            
+            // Calculate theoretical values
+            simulationData.maxHeight = (v0 * v0) / (2 * g);
+            simulationData.timeToPeak = v0 / g;
+            simulationData.totalTime = 2 * simulationData.timeToPeak;
+            simulationData.finalVelocity = -v0;
+            simulationData.hasReachedPeak = false;
+            simulationData.peakReached = false;
+            
+            // Update achievement display with theoretical values
+            updateVerticalUpAchievementDisplay();
+            
+            const ball = document.getElementById('ball-up');
+            const simulationArea = document.getElementById('simulation-area-up');
+            
+            const startX = simulationArea.offsetWidth / 2 - 15;
+            const startY = simulationArea.offsetHeight - 100;
+            const scale = 4;
+            
+            let t = 0;
+            const dt = 0.02;
+            let trailCount = 0;
+            const maxTrails = 5;
+            
+            function animate() {
+                // Calculate physics
+                const velocity = v0 - g * t;
+                const height = v0 * t - 0.5 * g * t * t;
+                
+                // Check if reached peak
+                if (velocity <= 0 && !simulationData.peakReached && t > 0) {
+                    simulationData.peakReached = true;
+                    simulationData.hasReachedPeak = true;
+                    updateVerticalUpAchievementDisplay();
+                }
+                
+                // Stop if ball hits ground
+                if (height < 0 && t > 0) {
+                    isAnimating = false;
+                    updateVerticalUpDisplay(simulationData.totalTime, simulationData.finalVelocity, 0, "Selesai");
+                    updateVerticalUpAchievementDisplay();
+                    return;
+                }
+                
+                // Update ball position
+                const ballY = startY - height * scale;
+                const ballCenterX = startX + 15;
+                const ballCenterY = ballY + 15;
+                
+                ball.style.left = startX + 'px';
+                ball.style.top = ballY + 'px';
+                
+                // Update ball arrow color, direction, and length based on velocity
+                const ballArrow = ball.querySelector('.ball-arrow');
+                const velocityMagnitude = Math.abs(velocity);
+                
+                // Calculate arrow length based on velocity (10px minimum, 50px maximum)
+                const minLength = 10;
+                const maxLength = 50;
+                const maxVelocity = 30; // Expected maximum velocity for scaling
+                const arrowLength = Math.max(minLength, Math.min(maxLength, minLength + (velocityMagnitude / maxVelocity) * (maxLength - minLength)));
+                
+                if (velocity > 0.1) {
+                    ball.style.transform = 'rotate(-90deg)';
+                    ballArrow.style.setProperty('--arrow-color', '#10b981');
+                    ballArrow.style.setProperty('--arrow-length', arrowLength + 'px');
+                } else if (velocity < -0.1) {
+                    ball.style.transform = 'rotate(90deg)';
+                    ballArrow.style.setProperty('--arrow-color', '#ef4444');
+                    ballArrow.style.setProperty('--arrow-length', arrowLength + 'px');
+                } else {
+                    ball.style.transform = 'rotate(0deg)';
+                    ballArrow.style.setProperty('--arrow-color', '#6b7280');
+                    ballArrow.style.setProperty('--arrow-length', minLength + 'px');
+                }
+                
+                // Create more ball trail dots for longer trajectory
+                const totalTime = simulationData.totalTime;
+                const trailInterval = totalTime / 16; // 16 intervals for 15 dots
+                const maxTrailsUp = 15; // Increased from 5 to 15
+                
+                if (t >= trailInterval * (trailCount + 1) && trailCount < maxTrailsUp) {
+                    createBallTrail(ballCenterX, ballCenterY, 'simulation-area-up');
+                    trailCount++;
+                }
+                
+                // Store trajectory points for the dotted line
+                trajectoryPoints.push({x: ballCenterX, y: ballCenterY});
+                updateTrajectoryPath('trajectory-path-up');
+                
+                // Determine phase
+                let phase;
+                if (velocity > 0.1) phase = "Naik";
+                else if (Math.abs(velocity) <= 0.1) phase = "Puncak";
+                else phase = "Turun";
+                
+                // Update display
+                updateVerticalUpDisplay(t, velocity, height, phase);
+                
+                t += dt;
+                
+                if (isAnimating) {
+                    animationId = requestAnimationFrame(animate);
+                }
+            }
+            
+            animate();
+        }
+
+        // Free Fall Simulation
+        function startFreeFallSimulation() {
+            if (isAnimating) return;
+
+            const h0 = parseFloat(document.getElementById('initial-height').value);
+            const g = parseFloat(document.getElementById('gravity-fall').value);
+            
+            resetFreeFallSimulation();
+            isAnimating = true;
+            
+            // Reset trail variables
+            velocityTrails = [];
+            ballTrails = [];
+            trajectoryPoints = [];
+            lastTrailTime = 0;
+            lastBallTrailTime = 0;
+            
+            // Calculate theoretical values for free fall
+            const fallTime = Math.sqrt(2 * h0 / g);
+            const finalVelocity = g * fallTime;
+            
+            const ball = document.getElementById('ball-fall');
+            const simulationArea = document.getElementById('simulation-area-fall');
+            
+            const startX = simulationArea.offsetWidth / 2 - 15;
+            const startY = 50; // Start from top
+            const endY = simulationArea.offsetHeight - 100;
+            const totalDistance = endY - startY;
+            const scale = totalDistance / h0;
+            
+            let t = 0;
+            const dt = 0.02;
+            let trailCount = 0;
+            const maxTrails = 5;
+            
+            // Update initial display
+            document.getElementById('initial-height-display').textContent = h0.toFixed(1);
+            document.getElementById('fall-time-display').textContent = fallTime.toFixed(2);
+            document.getElementById('final-velocity-fall-display').textContent = finalVelocity.toFixed(1);
+            
+            function animate() {
+                // Calculate physics for free fall
+                const velocity = g * t; // v = gt (starting from rest)
+                const distanceFallen = 0.5 * g * t * t; // s = 1/2 * g * t²
+                const currentHeight = h0 - distanceFallen;
+                
+                // Stop if ball hits ground
+                if (currentHeight <= 0 || t >= fallTime) {
+                    isAnimating = false;
+                    updateFreeFallDisplay(fallTime, finalVelocity, 0, "Selesai");
+                    document.getElementById('achievement-status-fall').textContent = "✅ Selesai";
+                    return;
+                }
+                
+                // Update ball position
+                const ballY = startY + distanceFallen * scale;
+                const ballCenterX = startX + 15;
+                const ballCenterY = ballY + 15;
+                
+                ball.style.left = startX + 'px';
+                ball.style.top = ballY + 'px';
+                
+                // Update ball arrow (always pointing down, length increases with speed)
+                const ballArrow = ball.querySelector('.ball-arrow');
+                const velocityMagnitude = Math.abs(velocity);
+                
+                // Calculate arrow length based on velocity (10px minimum, 50px maximum)
+                const minLength = 10;
+                const maxLength = 50;
+                const maxVelocity = Math.sqrt(2 * g * h0); // Terminal velocity for this height
+                const arrowLength = Math.max(minLength, Math.min(maxLength, minLength + (velocityMagnitude / maxVelocity) * (maxLength - minLength)));
+                
+                ball.style.transform = 'rotate(90deg)';
+                ballArrow.style.setProperty('--arrow-color', '#ef4444');
+                ballArrow.style.setProperty('--arrow-length', arrowLength + 'px');
+                
+                // Create more ball trail dots for longer trajectory
+                const trailInterval = fallTime / 16; // 16 intervals for 15 dots
+                const maxTrailsFall = 15; // Increased from 5 to 15
+                
+                if (t >= trailInterval * (trailCount + 1) && trailCount < maxTrailsFall) {
+                    createBallTrail(ballCenterX, ballCenterY, 'simulation-area-fall');
+                    trailCount++;
+                }
+                
+                // Store trajectory points for the dotted line
+                trajectoryPoints.push({x: ballCenterX, y: ballCenterY});
+                updateTrajectoryPath('trajectory-path-fall');
+                
+                // Update display
+                updateFreeFallDisplay(t, velocity, currentHeight, "Jatuh");
+                
+                t += dt;
+                
+                if (isAnimating) {
+                    animationId = requestAnimationFrame(animate);
+                }
+            }
+            
+            animate();
+        }
+
+        function createBallTrail(x, y, areaId) {
+            const simulationArea = document.getElementById(areaId);
+            const trailDot = document.createElement('div');
+            trailDot.className = 'ball-trail';
+            
+            trailDot.style.left = (x - 4) + 'px';
+            trailDot.style.top = (y - 4) + 'px';
+            
+            simulationArea.appendChild(trailDot);
+            ballTrails.push(trailDot);
+        }
+
+        function updateTrajectoryPath(pathId) {
+            if (trajectoryPoints.length < 2) return;
+            
+            const path = document.getElementById(pathId);
+            
+            let pathData = `M ${trajectoryPoints[0].x} ${trajectoryPoints[0].y}`;
+            for (let i = 1; i < trajectoryPoints.length; i++) {
+                pathData += ` L ${trajectoryPoints[i].x} ${trajectoryPoints[i].y}`;
+            }
+            
+            path.setAttribute('d', pathData);
+        }
+
+        // Vertical Up Simulation Functions
+        function resetVerticalUpSimulation() {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+            }
+            isAnimating = false;
+            
+            // Reset simulation data
+            simulationData = {
+                maxHeight: 0,
+                timeToPeak: 0,
+                totalTime: 0,
+                finalVelocity: 0,
+                hasReachedPeak: false,
+                peakReached: false
+            };
+            
+            // Clear all trails
+            ballTrails.forEach(trail => {
+                trail.remove();
+            });
+            ballTrails = [];
+            
+            // Reset trail variables
+            trajectoryPoints = [];
+            
+            // Clear trajectory path
+            document.getElementById('trajectory-path-up').setAttribute('d', '');
+            
+            const ball = document.getElementById('ball-up');
+            const simulationArea = document.getElementById('simulation-area-up');
+            
+            const startX = simulationArea.offsetWidth / 2 - 15;
+            const startY = simulationArea.offsetHeight - 100;
+            
+            ball.style.left = startX + 'px';
+            ball.style.top = startY + 'px';
+            
+            // Reset ball arrow to default state
+            ball.style.transform = 'rotate(0deg)';
+            const ballArrow = ball.querySelector('.ball-arrow');
+            ballArrow.style.setProperty('--arrow-color', '#6b7280');
+            ballArrow.style.setProperty('--arrow-length', '10px');
+            
+            updateVerticalUpDisplay(0, 0, 0, "Siap");
+            updateVerticalUpAchievementDisplay();
+        }
+
+        function updateVerticalUpDisplay(time, velocity, height, phase) {
+            document.getElementById('time-display-up').textContent = time.toFixed(2);
+            document.getElementById('velocity-display-up').textContent = velocity.toFixed(1);
+            document.getElementById('height-display-up').textContent = Math.max(height, 0).toFixed(1);
+            document.getElementById('phase-display-up').textContent = phase;
+        }
+
+        function updateVerticalUpAchievementDisplay() {
+            document.getElementById('max-height-display-up').textContent = simulationData.maxHeight.toFixed(1);
+            document.getElementById('time-to-peak-display-up').textContent = simulationData.timeToPeak.toFixed(2);
+            document.getElementById('total-time-display-up').textContent = simulationData.totalTime.toFixed(2);
+            document.getElementById('final-velocity-display-up').textContent = simulationData.finalVelocity.toFixed(1);
+            
+            let status = "Belum Dimulai";
+            if (isAnimating && !simulationData.hasReachedPeak) {
+                status = "🚀 Sedang Naik";
+            } else if (isAnimating && simulationData.hasReachedPeak) {
+                status = "⬇️ Sedang Turun";
+            } else if (simulationData.hasReachedPeak && !isAnimating) {
+                status = "✅ Selesai";
+            } else if (simulationData.maxHeight > 0 && !isAnimating) {
+                status = "⏸️ Siap Mulai";
+            }
+            
+            document.getElementById('achievement-status-up').textContent = status;
+        }
+
+        // Free Fall Simulation Functions
+        function resetFreeFallSimulation() {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+            }
+            isAnimating = false;
+            
+            // Clear all trails
+            ballTrails.forEach(trail => {
+                trail.remove();
+            });
+            ballTrails = [];
+            
+            // Reset trail variables
+            trajectoryPoints = [];
+            
+            // Clear trajectory path
+            document.getElementById('trajectory-path-fall').setAttribute('d', '');
+            
+            const ball = document.getElementById('ball-fall');
+            const simulationArea = document.getElementById('simulation-area-fall');
+            
+            const startX = simulationArea.offsetWidth / 2 - 15;
+            const startY = 50;
+            
+            ball.style.left = startX + 'px';
+            ball.style.top = startY + 'px';
+            
+            // Reset ball arrow to default state
+            ball.style.transform = 'rotate(0deg)';
+            const ballArrow = ball.querySelector('.ball-arrow');
+            ballArrow.style.setProperty('--arrow-color', '#6b7280');
+            ballArrow.style.setProperty('--arrow-length', '10px');
+            
+            updateFreeFallDisplay(0, 0, 0, "Siap");
+            document.getElementById('initial-height-display').textContent = '0.0';
+            document.getElementById('fall-time-display').textContent = '0.0';
+            document.getElementById('final-velocity-fall-display').textContent = '0.0';
+            document.getElementById('achievement-status-fall').textContent = "Belum Dimulai";
+        }
+
+        function updateFreeFallDisplay(time, velocity, height, phase) {
+            document.getElementById('time-display-fall').textContent = time.toFixed(2);
+            document.getElementById('velocity-display-fall').textContent = velocity.toFixed(1);
+            document.getElementById('height-display-fall').textContent = Math.max(height, 0).toFixed(1);
+            document.getElementById('phase-display-fall').textContent = phase;
+        }
+
+        // Experiment functions
+        let experimentData = {
+            times: [],
+            heights: [],
+            validCount: 0
+        };
+
+        function calculateHeight(experimentNumber) {
+            const timeInput = document.getElementById(`time${experimentNumber}`);
+            const time = parseFloat(timeInput.value);
+            const gravity = parseFloat(document.getElementById('gravity-experiment').value);
+            
+            if (time > 0) {
+                // Using formula: h = (g * t²) / 8
+                const height = (gravity * time * time) / 8;
+                
+                // Update display
+                document.getElementById(`display-time${experimentNumber}`).textContent = time.toFixed(2);
+                document.getElementById(`display-height${experimentNumber}`).textContent = height.toFixed(2);
+                
+                // Store data
+                experimentData.times[experimentNumber - 1] = time;
+                experimentData.heights[experimentNumber - 1] = height;
+                
+                // Update statistics
+                updateStatistics();
+            } else {
+                // Clear display if invalid
+                document.getElementById(`display-time${experimentNumber}`).textContent = '-';
+                document.getElementById(`display-height${experimentNumber}`).textContent = '-';
+                
+                // Remove from data
+                experimentData.times[experimentNumber - 1] = null;
+                experimentData.heights[experimentNumber - 1] = null;
+                
+                updateStatistics();
+            }
+        }
+
+        function calculateAllHeights() {
+            const gravity = parseFloat(document.getElementById('gravity-experiment').value);
+            
+            for (let i = 1; i <= 10; i++) {
+                const timeInput = document.getElementById(`time${i}`);
+                const time = parseFloat(timeInput.value);
+                
+                if (time > 0) {
+                    const height = (gravity * time * time) / 8;
+                    
+                    document.getElementById(`display-time${i}`).textContent = time.toFixed(2);
+                    document.getElementById(`display-height${i}`).textContent = height.toFixed(2);
+                    
+                    experimentData.times[i - 1] = time;
+                    experimentData.heights[i - 1] = height;
+                }
+            }
+            
+            updateStatistics();
+            showInlineMessage('Semua ketinggian berhasil dihitung!', 'success');
+        }
+
+        function clearAllData() {
+            // Clear all inputs
+            for (let i = 1; i <= 10; i++) {
+                document.getElementById(`time${i}`).value = '';
+                document.getElementById(`display-time${i}`).textContent = '-';
+                document.getElementById(`display-height${i}`).textContent = '-';
+            }
+            
+            // Reset data
+            experimentData = {
+                times: [],
+                heights: [],
+                validCount: 0
+            };
+            
+            // Reset statistics
+            updateStatistics();
+            showInlineMessage('Semua data berhasil dihapus!', 'success');
+        }
+
+        function updateStatistics() {
+            // Filter valid heights
+            const validHeights = experimentData.heights.filter(h => h !== null && h !== undefined && !isNaN(h));
+            experimentData.validCount = validHeights.length;
+            
+            if (validHeights.length === 0) {
+                document.getElementById('valid-data-count').textContent = '0';
+                document.getElementById('average-height').textContent = '0.00';
+                document.getElementById('min-height').textContent = '0.00';
+                document.getElementById('max-height').textContent = '0.00';
+                document.getElementById('std-deviation').textContent = '0.00';
+                return;
+            }
+            
+            // Calculate statistics
+            const sum = validHeights.reduce((a, b) => a + b, 0);
+            const average = sum / validHeights.length;
+            const min = Math.min(...validHeights);
+            const max = Math.max(...validHeights);
+            
+            // Calculate standard deviation
+            const variance = validHeights.reduce((acc, height) => {
+                return acc + Math.pow(height - average, 2);
+            }, 0) / validHeights.length;
+            const stdDev = Math.sqrt(variance);
+            
+            // Update display
+            document.getElementById('valid-data-count').textContent = validHeights.length;
+            document.getElementById('average-height').textContent = average.toFixed(2);
+            document.getElementById('min-height').textContent = min.toFixed(2);
+            document.getElementById('max-height').textContent = max.toFixed(2);
+            document.getElementById('std-deviation').textContent = stdDev.toFixed(2);
+        }
+
+        // Quiz functions
+        async function submitQuiz() {
+            const studentName = document.getElementById('student-name').value.trim();
+            if (!studentName) {
+                showInlineMessage('Mohon masukkan nama Anda terlebih dahulu!', 'error');
+                return;
+            }
+
+            const submitBtn = document.getElementById('submit-btn');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<span class="loading"></span> Menyimpan...';
+            submitBtn.disabled = true;
+
+            // Collect answers
+            const userAnswers = {};
+            let score = 0;
+            const totalQuestions = 10;
+
+            for (let i = 1; i <= totalQuestions; i++) {
+                const selected = document.querySelector(`input[name="q${i}"]:checked`);
+                if (selected) {
+                    userAnswers[`q${i}`] = selected.value;
+                    if (selected.value === quizAnswers[`q${i}`]) {
+                        score++;
+                    }
+                }
+            }
+
+            const percentage = Math.round((score / totalQuestions) * 100);
+
+            // Save to Data SDK
+            if (window.dataSdk && currentData.length < 999) {
+                try {
+                    const result = await window.dataSdk.create({
+                        student_name: studentName,
+                        quiz_score: percentage,
+                        answers: JSON.stringify(userAnswers),
+                        completed_at: new Date().toISOString()
+                    });
+
+                    if (!result.isOk) {
+                        showInlineMessage('Gagal menyimpan hasil kuis. Silakan coba lagi.', 'error');
+                        submitBtn.innerHTML = originalText;
+                        submitBtn.disabled = false;
+                        return;
+                    }
+                } catch (error) {
+                    showInlineMessage('Terjadi kesalahan saat menyimpan. Silakan coba lagi.', 'error');
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                    return;
+                }
+            } else if (currentData.length >= 999) {
+                showInlineMessage('Batas maksimum 999 hasil kuis telah tercapai. Mohon hubungi guru untuk menghapus data lama.', 'error');
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+                return;
+            }
+
+            // Show results
+            showQuizResults(score, totalQuestions, percentage, userAnswers);
+            
+            submitBtn.innerHTML = '✅ Tersimpan';
+            setTimeout(() => {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }, 2000);
+        }
+
+        function showQuizResults(score, total, percentage, userAnswers) {
+            const resultsPanel = document.getElementById('results-panel');
+            const scoreDisplay = document.getElementById('score-display');
+            const answerReview = document.getElementById('answer-review');
+
+            let gradeText = '';
+            if (percentage >= 80) gradeText = 'Sangat Baik! 🌟';
+            else if (percentage >= 70) gradeText = 'Baik! 👍';
+            else if (percentage >= 60) gradeText = 'Cukup 👌';
+            else gradeText = 'Perlu Belajar Lagi 📚';
+
+            scoreDisplay.innerHTML = `
+                <strong>Skor Anda: ${score}/${total} (${percentage}%)</strong><br>
+                <span style="font-size: 18px; color: #059669;">${gradeText}</span>
+            `;
+
+            // Show answer review with detailed explanations
+            let reviewHTML = '<h5>📋 Review Jawaban dengan Penjelasan:</h5>';
+            const questions = [
+                'Kecepatan benda di titik puncak',
+                'Waktu mencapai puncak (v₀=30 m/s)',
+                'Percepatan pada gerak jatuh bebas',
+                'Rumus tinggi maksimum',
+                'Arah kecepatan saat turun',
+                'Kecepatan batu saat menyentuh tanah',
+                'Bola pingpong vs bola besi dalam ruang hampa',
+                'Benda dengan massa berbeda jatuh bersamaan',
+                'Grafik v-t pada gerak vertikal',
+                'Tinggi maksimum dari waktu total'
+            ];
+
+            for (let i = 1; i <= 10; i++) {
+                const userAnswer = userAnswers[`q${i}`] || 'Tidak dijawab';
+                const isCorrect = userAnswer === quizAnswers[`q${i}`];
+                const icon = isCorrect ? '✅' : '❌';
+                const explanation = quizExplanations[`q${i}`];
+                
+                reviewHTML += `
+                    <div style="background: ${isCorrect ? '#f0fdf4' : '#fef2f2'}; border: 2px solid ${isCorrect ? '#16a34a' : '#dc2626'}; border-radius: 8px; padding: 15px; margin: 15px 0;">
+                        <p><strong>${i}. ${questions[i-1]}</strong></p>
+                        <p>${icon} <strong>Jawaban Anda:</strong> ${userAnswer === 'Tidak dijawab' ? userAnswer : userAnswer + ')'}</p>
+                        <p>✓ <strong>Jawaban Benar:</strong> ${explanation.correct}</p>
+                        <p style="margin-top: 10px; padding: 10px; background: rgba(59, 130, 246, 0.1); border-radius: 6px;">
+                            <strong>💡 Penjelasan:</strong> ${explanation.explanation}
+                        </p>
+                    </div>
+                `;
+            }
+
+            answerReview.innerHTML = reviewHTML;
+            resultsPanel.style.display = 'block';
+
+            // Highlight selected answers and show correct answers
+            for (let i = 1; i <= 10; i++) {
+                document.querySelectorAll(`input[name="q${i}"]`).forEach(input => {
+                    const option = input.closest('.quiz-option');
+                    const isSelected = input.checked;
+                    const isCorrectAnswer = input.value === quizAnswers[`q${i}`];
+                    
+                    if (isSelected) {
+                        // Highlight user's selected answer
+                        option.classList.add(isCorrectAnswer ? 'correct' : 'incorrect');
+                    } else if (isCorrectAnswer) {
+                        // Show correct answer if user didn't select it
+                        option.style.background = '#dcfce7';
+                        option.style.borderColor = '#16a34a';
+                        option.style.fontWeight = '600';
+                    }
+                });
+            }
+        }
+
+        function showInlineMessage(message, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 8px;
+                color: white;
+                font-weight: 600;
+                z-index: 1000;
+                max-width: 300px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+                background: ${type === 'error' ? '#ef4444' : '#10b981'};
+            `;
+            messageDiv.textContent = message;
+            document.body.appendChild(messageDiv);
+
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 4000);
+        }
+
+        // Results tab functions
+        function updateResultsDisplay() {
+            if (!currentData || currentData.length === 0) {
+                document.getElementById('results-tbody').innerHTML = `
+                    <tr>
+                        <td colspan="6" style="border: 1px solid #d1d5db; padding: 20px; text-align: center; color: #6b7280;">
+                            Belum ada hasil kuis yang tersimpan
+                        </td>
+                    </tr>
+                `;
+                updateClassStatistics([]);
+                return;
+            }
+
+            filterResults();
+        }
+
+        function filterResults() {
+            const searchTerm = document.getElementById('search-student').value.toLowerCase();
+            const scoreFilter = document.getElementById('filter-score').value;
+            
+            let filteredData = currentData.filter(student => {
+                const nameMatch = student.student_name.toLowerCase().includes(searchTerm);
+                let scoreMatch = true;
+                
+                if (scoreFilter !== 'all') {
+                    const score = student.quiz_score;
+                    switch (scoreFilter) {
+                        case 'excellent':
+                            scoreMatch = score >= 80;
+                            break;
+                        case 'good':
+                            scoreMatch = score >= 70 && score < 80;
+                            break;
+                        case 'fair':
+                            scoreMatch = score >= 60 && score < 70;
+                            break;
+                        case 'poor':
+                            scoreMatch = score < 60;
+                            break;
+                    }
+                }
+                
+                return nameMatch && scoreMatch;
+            });
+
+            displayFilteredResults(filteredData);
+            updateClassStatistics(currentData);
+        }
+
+        function displayFilteredResults(data) {
+            const tbody = document.getElementById('results-tbody');
+            
+            if (data.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="border: 1px solid #d1d5db; padding: 20px; text-align: center; color: #6b7280;">
+                            Tidak ada hasil yang sesuai dengan filter
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            // Sort by score descending
+            data.sort((a, b) => b.quiz_score - a.quiz_score);
+
+            tbody.innerHTML = data.map((student, index) => {
+                const grade = getGrade(student.quiz_score);
+                const gradeColor = getGradeColor(student.quiz_score);
+                const completedDate = new Date(student.completed_at).toLocaleString('id-ID');
+                
+                return `
+                    <tr style="background: ${index % 2 === 0 ? '#f9fafb' : 'white'};">
+                        <td style="border: 1px solid #d1d5db; padding: 12px; text-align: center;">${index + 1}</td>
+                        <td style="border: 1px solid #d1d5db; padding: 12px; font-weight: 600;">${student.student_name}</td>
+                        <td style="border: 1px solid #d1d5db; padding: 12px; text-align: center; font-weight: 600; color: ${gradeColor};">${student.quiz_score}%</td>
+                        <td style="border: 1px solid #d1d5db; padding: 12px; text-align: center;">
+                            <span style="background: ${gradeColor}; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 600;">
+                                ${grade}
+                            </span>
+                        </td>
+                        <td style="border: 1px solid #d1d5db; padding: 12px; text-align: center; font-size: 14px;">${completedDate}</td>
+                        <td style="border: 1px solid #d1d5db; padding: 12px; text-align: center;">
+                            <button onclick="showStudentDetail('${student.__backendId}')" style="background: #4f46e5; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;">
+                                Detail
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function updateClassStatistics(data) {
+            if (!data || data.length === 0) {
+                document.getElementById('total-students').textContent = '0';
+                document.getElementById('average-score').textContent = '0';
+                document.getElementById('highest-score').textContent = '0';
+                document.getElementById('lowest-score').textContent = '0';
+                document.getElementById('passing-count').textContent = '0';
+                document.getElementById('passing-rate').textContent = '0';
+                return;
+            }
+
+            const scores = data.map(s => s.quiz_score);
+            const totalStudents = data.length;
+            const averageScore = Math.round(scores.reduce((a, b) => a + b, 0) / totalStudents);
+            const highestScore = Math.max(...scores);
+            const lowestScore = Math.min(...scores);
+            const passingCount = scores.filter(score => score >= 70).length;
+            const passingRate = Math.round((passingCount / totalStudents) * 100);
+
+            document.getElementById('total-students').textContent = totalStudents;
+            document.getElementById('average-score').textContent = averageScore;
+            document.getElementById('highest-score').textContent = highestScore;
+            document.getElementById('lowest-score').textContent = lowestScore;
+            document.getElementById('passing-count').textContent = passingCount;
+            document.getElementById('passing-rate').textContent = passingRate;
+        }
+
+        function getGrade(score) {
+            if (score >= 80) return 'Sangat Baik';
+            if (score >= 70) return 'Baik';
+            if (score >= 60) return 'Cukup';
+            return 'Perlu Belajar';
+        }
+
+        function getGradeColor(score) {
+            if (score >= 80) return '#059669';
+            if (score >= 70) return '#0ea5e9';
+            if (score >= 60) return '#f59e0b';
+            return '#ef4444';
+        }
+
+        function refreshResults() {
+            updateResultsDisplay();
+            showInlineMessage('Data hasil kuis berhasil diperbarui!', 'success');
+        }
+
+        function showStudentDetail(studentId) {
+            const student = currentData.find(s => s.__backendId === studentId);
+            if (!student) return;
+
+            const answers = JSON.parse(student.answers);
+            const completedDate = new Date(student.completed_at).toLocaleString('id-ID');
+            const grade = getGrade(student.quiz_score);
+            const gradeColor = getGradeColor(student.quiz_score);
+
+            const questions = [
+                'Kecepatan benda di titik puncak',
+                'Waktu mencapai puncak (v₀=30 m/s)',
+                'Percepatan pada gerak jatuh bebas',
+                'Rumus tinggi maksimum',
+                'Arah kecepatan saat turun',
+                'Kecepatan batu saat menyentuh tanah',
+                'Bola pingpong vs bola besi dalam ruang hampa',
+                'Benda dengan massa berbeda jatuh bersamaan',
+                'Grafik v-t pada gerak vertikal',
+                'Tinggi maksimum dari waktu total'
+            ];
+
+            let detailHTML = `
+                <h3>📋 Detail Hasil Kuis</h3>
+                <div style="background: #f0f9ff; border: 2px solid #0ea5e9; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                    <h4>👤 Informasi Siswa</h4>
+                    <p><strong>Nama:</strong> ${student.student_name}</p>
+                    <p><strong>Skor:</strong> <span style="color: ${gradeColor}; font-weight: 600;">${student.quiz_score}%</span></p>
+                    <p><strong>Grade:</strong> <span style="background: ${gradeColor}; color: white; padding: 4px 8px; border-radius: 12px; font-size: 14px;">${grade}</span></p>
+                    <p><strong>Waktu Selesai:</strong> ${completedDate}</p>
+                </div>
+                
+                <h4>📝 Review Jawaban:</h4>
+            `;
+
+            for (let i = 1; i <= 10; i++) {
+                const userAnswer = answers[`q${i}`] || 'Tidak dijawab';
+                const correctAnswer = quizAnswers[`q${i}`];
+                const isCorrect = userAnswer === correctAnswer;
+                const icon = isCorrect ? '✅' : '❌';
+                const explanation = quizExplanations[`q${i}`];
+                
+                detailHTML += `
+                    <div style="background: ${isCorrect ? '#f0fdf4' : '#fef2f2'}; border: 2px solid ${isCorrect ? '#16a34a' : '#dc2626'}; border-radius: 8px; padding: 15px; margin: 15px 0;">
+                        <p><strong>${i}. ${questions[i-1]}</strong></p>
+                        <p>${icon} <strong>Jawaban Siswa:</strong> ${userAnswer === 'Tidak dijawab' ? userAnswer : userAnswer + ')'}</p>
+                        <p>✓ <strong>Jawaban Benar:</strong> ${explanation.correct}</p>
+                        <p style="margin-top: 10px; padding: 10px; background: rgba(59, 130, 246, 0.1); border-radius: 6px; font-size: 14px;">
+                            <strong>💡 Penjelasan:</strong> ${explanation.explanation}
+                        </p>
+                    </div>
+                `;
+            }
+
+            document.getElementById('student-detail-content').innerHTML = detailHTML;
+            document.getElementById('student-detail-modal').style.display = 'block';
+        }
+
+        function closeStudentDetail() {
+            document.getElementById('student-detail-modal').style.display = 'none';
+        }
+
+        // Initialize app when page loads
+        document.addEventListener('DOMContentLoaded', initializeApp);
+
+        // Handle quiz option selection
+        document.addEventListener('change', function(e) {
+            if (e.target.type === 'radio') {
+                // Remove previous selection styling
+                const questionName = e.target.name;
+                document.querySelectorAll(`input[name="${questionName}"]`).forEach(input => {
+                    input.closest('.quiz-option').classList.remove('selected');
+                });
+                
+                // Add selection styling
+                e.target.closest('.quiz-option').classList.add('selected');
+            }
+        });
+    </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a79b70d9667df8f',t:'MTc2NDY2Njg3Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
